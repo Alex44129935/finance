@@ -203,7 +203,7 @@ KBar_df = pd.DataFrame(KBar_dic)
 ####### (4) 計算各種技術指標 #######
 
 #%%
-######  (i) 移動平均線策略 
+######   移動平均線策略 
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")  ## Add the caching decorator
 def Calculate_MA(df, period=10):
     ##### 計算長短移動平均線
@@ -226,7 +226,7 @@ last_nan_index_MA = KBar_df['MA_long'][::-1].index[KBar_df['MA_long'][::-1].appl
 
 
 #%%
-######  (ii) RSI 策略 
+######   RSI 策略 
 ##### 假设 df 是一个包含价格数据的Pandas DataFrame，其中 'close' 是KBar週期收盤價
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")  ## Add the caching decorator
 def Calculate_RSI(df, period=14):
@@ -272,7 +272,7 @@ last_nan_index_RSI = KBar_df['RSI_long'][::-1].index[KBar_df['RSI_long'][::-1].a
 
 
 #%%
-######  (iii) Bollinger Band (布林通道) 策略 
+######   Bollinger Band (布林通道) 策略 
 ##### 假设df是包含价格数据的Pandas DataFrame，'close'列是每日收盘价格
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")  ## Add the caching decorator
 def Calculate_Bollinger_Bands(df, period=20, num_std_dev=2):
@@ -298,7 +298,7 @@ last_nan_index_BB = KBar_df['SMA'][::-1].index[KBar_df['SMA'][::-1].apply(pd.isn
 
 
 #%%
-######  (iv) MACD(異同移動平均線) 策略 
+######  MACD(異同移動平均線) 策略 
 # 假设df是包含价格数据的Pandas DataFrame，'price'列是每日收盘价格
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")  ## Add the caching decorator
 def Calculate_MACD(df, fast_period=12, slow_period=26, signal_period=9):
@@ -331,7 +331,7 @@ else:
     last_nan_index_MACD = 0
 
 #%%
-######  (v) ATR（Average True Range）波動率指標 
+######   ATR（Average True Range）波動率指標 
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_ATR(df, period=14):
     high_low = df['high'] - df['low']
@@ -348,7 +348,7 @@ KBar_df['ATR'] = Calculate_ATR(KBar_df, atr_period)
 last_nan_index_ATR = KBar_df['ATR'][::-1].index[KBar_df['ATR'][::-1].apply(pd.isna)][0]
 
 #%%
-######  (vi) OBV（On-Balance Volume）指標
+######   OBV（On-Balance Volume）指標
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_OBV(df):
     obv = [0]
@@ -365,7 +365,7 @@ KBar_df['OBV'] = Calculate_OBV(KBar_df)
 last_nan_index_OBV = 0  # OBV 一開始就不會有 NaN
 
 #%%
-#####  (vii) CCI - 商品通道指標
+#####   CCI - 商品通道指標
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_CCI(df, period=20):
     tp = (df['high'] + df['low'] + df['close']) / 3
@@ -379,25 +379,10 @@ with st.expander("設定 CCI 參數"):
 KBar_df['CCI'] = Calculate_CCI(KBar_df, cci_period)
 
 
-#%%
-##### (viii) Stochastic Oscillator - KD 隨機震盪指標
 
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_KD(df, k_period=14, d_period=3):
-    low_min = df['low'].rolling(window=k_period).min()
-    high_max = df['high'].rolling(window=k_period).max()
-    rsv = 100 * (df['close'] - low_min) / (high_max - low_min)
-    k = rsv.ewm(alpha=1/d_period, adjust=False).mean()
-    d = k.ewm(alpha=1/d_period, adjust=False).mean()
-    return k, d
-
-with st.expander("設定 KD 隨機震盪指標參數"):
-    k_period = st.slider("K 週期", 1, 100, 14)
-    d_period = st.slider("D 平滑週期", 1, 10, 3)
-KBar_df['K'], KBar_df['D'] = Calculate_KD(KBar_df, k_period, d_period)
 
 #%%
-#####  (ix) WILLR - 威廉指標（逆勢超買超賣）
+#####   WILLR - 威廉指標（逆勢超買超賣）
 
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_WILLR(df, period=14):
@@ -679,27 +664,7 @@ with st.expander("CCI - 商品通道指標"):
     )
     st.plotly_chart(fig6, use_container_width=True)
 
-# KD 隨機震盪指標
-with st.expander("KD 隨機震盪指標"):
-    fig7 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig7.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig7.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_KD+1:],
-            y=KBar_df['K'][last_nan_index_KD+1:],
-            mode='lines',
-            name=f'K({k_period})'
-        )
-    )
-    fig7.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_KD+1:],
-            y=KBar_df['D'][last_nan_index_KD+1:],
-            mode='lines',
-            name=f'D({d_period})'
-        )
-    )
-    st.plotly_chart(fig7, use_container_width=True)
+
 
 # WILLR 威廉指標
 with st.expander("WILLR - 威廉指標"):
