@@ -642,7 +642,6 @@ with st.expander("OBV（量價關係指標）"):
 
 # 計算各指標的最後 NaN 索引位置
 last_nan_index_CCI   = KBar_df['CCI'][::-1].index[KBar_df['CCI'][::-1].apply(pd.isna)][0]
-last_nan_index_KD    = KBar_df['K'][::-1].index[KBar_df['K'][::-1].apply(pd.isna)][0]
 last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply(pd.isna)][0]
 last_nan_index_MFI   = KBar_df['MFI'][::-1].index[KBar_df['MFI'][::-1].apply(pd.isna)][0]
 last_nan_index_ROC   = KBar_df['ROC'][::-1].index[KBar_df['ROC'][::-1].apply(pd.isna)][0]
