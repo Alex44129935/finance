@@ -330,22 +330,7 @@ if len(nan_indexes_MACD) > 0:
 else:
     last_nan_index_MACD = 0
 
-#%%
-######   ATR（Average True Range）波動率指標 
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_ATR(df, period=14):
-    high_low = df['high'] - df['low']
-    high_close = (df['high'] - df['close'].shift()).abs()
-    low_close = (df['low'] - df['close'].shift()).abs()
-    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-    atr = tr.rolling(window=period).mean()
-    return atr
 
-with st.expander("設定 ATR 波動率參數:"):
-    atr_period = st.slider("設定 ATR 計算週期", 1, 100, 14, key='visualization_ATR')
-
-KBar_df['ATR'] = Calculate_ATR(KBar_df, atr_period)
-last_nan_index_ATR = KBar_df['ATR'][::-1].index[KBar_df['ATR'][::-1].apply(pd.isna)][0]
 
 #%%
 ######   OBV（On-Balance Volume）指標
@@ -562,18 +547,7 @@ with st.expander("MACD(異同移動平均線)"):
     fig4.layout.yaxis2.showgrid=True
     st.plotly_chart(fig4, use_container_width=True)
 
-with st.expander("ATR（波動率指標）"):
-    fig5 = make_subplots(specs=[[{"secondary_y": True}]])
-    fig5.update_layout(
-        yaxis=dict(fixedrange=False, autorange=True),
-        xaxis=dict(rangeslider=dict(visible=True))
-    )
-    fig5.add_trace(go.Scatter(
-        x=KBar_df['time'][last_nan_index_ATR+1:], 
-        y=KBar_df['ATR'][last_nan_index_ATR+1:], 
-        mode='lines', line=dict(color='purple', width=2), name='ATR'
-    ), secondary_y=False)
-    st.plotly_chart(fig5, use_container_width=True)
+
 
 with st.expander("OBV（量價關係指標）"):
     fig6 = make_subplots(specs=[[{"secondary_y": True}]])
