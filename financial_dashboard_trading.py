@@ -365,18 +365,15 @@ KBar_df['OBV'] = Calculate_OBV(KBar_df)
 last_nan_index_OBV = 0  # OBV 一開始就不會有 NaN
 
 #%%
-#####   CCI - 商品通道指標
+#####   ROC - 價格變動率指標
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_CCI(df, period=20):
-    tp = (df['high'] + df['low'] + df['close']) / 3
-    sma = tp.rolling(window=period).mean()
-    mad = tp.rolling(window=period).apply(lambda x: np.fabs(x - x.mean()).mean())
-    cci = (tp - sma) / (0.015 * mad)
-    return cci
+def Calculate_ROC(df, period=12):
+    roc = ((df['close'] - df['close'].shift(period)) / df['close'].shift(period)) * 100
+    return roc
 
-with st.expander("設定 CCI 參數"):
-    cci_period = st.slider("CCI 計算週期", 1, 100, 20)
-KBar_df['CCI'] = Calculate_CCI(KBar_df, cci_period)
+with st.expander("設定 ROC（變動率）參數"):
+    roc_period = st.slider("ROC 計算週期", 1, 100, 12)
+KBar_df['ROC'] = Calculate_ROC(KBar_df, roc_period)
 
 
 
@@ -395,18 +392,19 @@ with st.expander("設定 威廉指標 (WILLR) 參數"):
     willr_period = st.slider("WILLR 計算週期", 1, 100, 14)
 KBar_df['WILLR'] = Calculate_WILLR(KBar_df, willr_period)
 
-
-
 #%%
-#####   ROC - 價格變動率指標
+#####   CCI - 商品通道指標
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_ROC(df, period=12):
-    roc = ((df['close'] - df['close'].shift(period)) / df['close'].shift(period)) * 100
-    return roc
+def Calculate_CCI(df, period=20):
+    tp = (df['high'] + df['low'] + df['close']) / 3
+    sma = tp.rolling(window=period).mean()
+    mad = tp.rolling(window=period).apply(lambda x: np.fabs(x - x.mean()).mean())
+    cci = (tp - sma) / (0.015 * mad)
+    return cci
 
-with st.expander("設定 ROC（變動率）參數"):
-    roc_period = st.slider("ROC 計算週期", 1, 100, 12)
-KBar_df['ROC'] = Calculate_ROC(KBar_df, roc_period)
+with st.expander("設定 CCI 參數"):
+    cci_period = st.slider("CCI 計算週期", 1, 100, 20)
+KBar_df['CCI'] = Calculate_CCI(KBar_df, cci_period)
 
 
 
@@ -609,20 +607,20 @@ last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply
 last_nan_index_ROC   = KBar_df['ROC'][::-1].index[KBar_df['ROC'][::-1].apply(pd.isna)][0]
 # PSAR 通常不產生 NaN，可直接從頭繪製
 
-# CCI
-with st.expander("CCI - 商品通道指標"):
-    fig6 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig6.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig6.add_trace(
+
+# ROC 價格變動率指標
+with st.expander("ROC - 價格變動率指標"):
+    fig10 = make_subplots(specs=[[{"secondary_y": False}]])
+    fig10.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
+    fig10.add_trace(
         go.Scatter(
-            x=KBar_df['time'][last_nan_index_CCI+1:],
-            y=KBar_df['CCI'][last_nan_index_CCI+1:],
+            x=KBar_df['time'][last_nan_index_ROC+1:],
+            y=KBar_df['ROC'][last_nan_index_ROC+1:],
             mode='lines',
-            name=f'CCI({cci_period})'
+            name=f'ROC({roc_period})'
         )
     )
-    st.plotly_chart(fig6, use_container_width=True)
-
+    st.plotly_chart(fig10, use_container_width=True)
 
 
 # WILLR 威廉指標
@@ -639,21 +637,20 @@ with st.expander("WILLR - 威廉指標"):
     )
     st.plotly_chart(fig8, use_container_width=True)
 
-
-
-# ROC 價格變動率指標
-with st.expander("ROC - 價格變動率指標"):
-    fig10 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig10.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig10.add_trace(
+# CCI
+with st.expander("CCI - 商品通道指標"):
+    fig6 = make_subplots(specs=[[{"secondary_y": False}]])
+    fig6.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
+    fig6.add_trace(
         go.Scatter(
-            x=KBar_df['time'][last_nan_index_ROC+1:],
-            y=KBar_df['ROC'][last_nan_index_ROC+1:],
+            x=KBar_df['time'][last_nan_index_CCI+1:],
+            y=KBar_df['CCI'][last_nan_index_CCI+1:],
             mode='lines',
-            name=f'ROC({roc_period})'
+            name=f'CCI({cci_period})'
         )
     )
-    st.plotly_chart(fig10, use_container_width=True)
+    st.plotly_chart(fig6, use_container_width=True)
+
 
 
 # PSAR 停損轉向指標
