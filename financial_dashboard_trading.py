@@ -378,19 +378,6 @@ KBar_df['ROC'] = Calculate_ROC(KBar_df, roc_period)
 
 
 
-#%%
-#####   WILLR - 威廉指標（逆勢超買超賣）
-
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_WILLR(df, period=14):
-    high_max = df['high'].rolling(window=period).max()
-    low_min = df['low'].rolling(window=period).min()
-    willr = -100 * (high_max - df['close']) / (high_max - low_min)
-    return willr
-
-with st.expander("設定 威廉指標 (WILLR) 參數"):
-    willr_period = st.slider("WILLR 計算週期", 1, 100, 14)
-KBar_df['WILLR'] = Calculate_WILLR(KBar_df, willr_period)
 
 #%%
 #####   CCI - 商品通道指標
@@ -603,7 +590,6 @@ with st.expander("OBV（量價關係指標）"):
 
 # 計算各指標的最後 NaN 索引位置
 last_nan_index_CCI   = KBar_df['CCI'][::-1].index[KBar_df['CCI'][::-1].apply(pd.isna)][0]
-last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply(pd.isna)][0]
 last_nan_index_ROC   = KBar_df['ROC'][::-1].index[KBar_df['ROC'][::-1].apply(pd.isna)][0]
 # PSAR 通常不產生 NaN，可直接從頭繪製
 
@@ -623,19 +609,7 @@ with st.expander("ROC - 價格變動率指標"):
     st.plotly_chart(fig10, use_container_width=True)
 
 
-# WILLR 威廉指標
-with st.expander("WILLR - 威廉指標"):
-    fig8 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig8.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig8.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_WILLR+1:],
-            y=KBar_df['WILLR'][last_nan_index_WILLR+1:],
-            mode='lines',
-            name=f'WILLR({willr_period})'
-        )
-    )
-    st.plotly_chart(fig8, use_container_width=True)
+
 
 # CCI
 with st.expander("CCI - 商品通道指標"):
