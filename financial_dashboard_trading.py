@@ -395,25 +395,10 @@ with st.expander("設定 威廉指標 (WILLR) 參數"):
     willr_period = st.slider("WILLR 計算週期", 1, 100, 14)
 KBar_df['WILLR'] = Calculate_WILLR(KBar_df, willr_period)
 
-#%%
-##### (x) MFI - 資金流量指標（RSI + 成交量）
 
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_MFI(df, period=14):
-    tp = (df['high'] + df['low'] + df['close']) / 3
-    mf = tp * df['volume']
-    pos_mf = mf.where(tp > tp.shift(), 0)
-    neg_mf = mf.where(tp < tp.shift(), 0)
-    mfr = pos_mf.rolling(window=period).sum() / neg_mf.rolling(window=period).sum()
-    mfi = 100 - (100 / (1 + mfr))
-    return mfi
-
-with st.expander("設定 MFI（資金流量）參數"):
-    mfi_period = st.slider("MFI 計算週期", 1, 100, 14)
-KBar_df['MFI'] = Calculate_MFI(KBar_df, mfi_period)
 
 #%%
-#####  (xi) ROC - 價格變動率指標
+#####   ROC - 價格變動率指標
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_ROC(df, period=12):
     roc = ((df['close'] - df['close'].shift(period)) / df['close'].shift(period)) * 100
@@ -423,32 +408,10 @@ with st.expander("設定 ROC（變動率）參數"):
     roc_period = st.slider("ROC 計算週期", 1, 100, 12)
 KBar_df['ROC'] = Calculate_ROC(KBar_df, roc_period)
 
-#%%
-#####  (xii) Momentum - 動能指標
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_MOM(df, period=10):
-    return df['close'] - df['close'].shift(period)
 
-with st.expander("設定 MOM（動能）參數"):
-    mom_period = st.slider("MOM 計算週期", 1, 100, 10)
-KBar_df['MOM'] = Calculate_MOM(KBar_df, mom_period)
 
 #%%
-#####  (xiii) TRIX - 三重平滑移動平均動能
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_TRIX(df, period=15):
-    ema1 = df['close'].ewm(span=period, adjust=False).mean()
-    ema2 = ema1.ewm(span=period, adjust=False).mean()
-    ema3 = ema2.ewm(span=period, adjust=False).mean()
-    trix = 100 * (ema3 - ema3.shift()) / ema3.shift()
-    return trix
-
-with st.expander("設定 TRIX（三重 EMA 動能）參數"):
-    trix_period = st.slider("TRIX 計算週期", 1, 100, 15)
-KBar_df['TRIX'] = Calculate_TRIX(KBar_df, trix_period)
-
-#%%
-#####  (xiv) PSAR - 停損轉向指標（Parabolic SAR）
+#####   PSAR - 停損轉向指標（Parabolic SAR）
 @st.cache_data(ttl=3600)
 def Calculate_PSAR(df, af_start=0.02, af_step=0.02, af_max=0.2):
     high = df['high'].values
@@ -643,10 +606,7 @@ with st.expander("OBV（量價關係指標）"):
 # 計算各指標的最後 NaN 索引位置
 last_nan_index_CCI   = KBar_df['CCI'][::-1].index[KBar_df['CCI'][::-1].apply(pd.isna)][0]
 last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply(pd.isna)][0]
-last_nan_index_MFI   = KBar_df['MFI'][::-1].index[KBar_df['MFI'][::-1].apply(pd.isna)][0]
 last_nan_index_ROC   = KBar_df['ROC'][::-1].index[KBar_df['ROC'][::-1].apply(pd.isna)][0]
-last_nan_index_MOM   = KBar_df['MOM'][::-1].index[KBar_df['MOM'][::-1].apply(pd.isna)][0]
-last_nan_index_TRIX  = KBar_df['TRIX'][::-1].index[KBar_df['TRIX'][::-1].apply(pd.isna)][0]
 # PSAR 通常不產生 NaN，可直接從頭繪製
 
 # CCI
@@ -679,19 +639,7 @@ with st.expander("WILLR - 威廉指標"):
     )
     st.plotly_chart(fig8, use_container_width=True)
 
-# MFI 資金流量指標
-with st.expander("MFI - 資金流量指標"):
-    fig9 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig9.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig9.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_MFI+1:],
-            y=KBar_df['MFI'][last_nan_index_MFI+1:],
-            mode='lines',
-            name=f'MFI({mfi_period})'
-        )
-    )
-    st.plotly_chart(fig9, use_container_width=True)
+
 
 # ROC 價格變動率指標
 with st.expander("ROC - 價格變動率指標"):
@@ -707,33 +655,6 @@ with st.expander("ROC - 價格變動率指標"):
     )
     st.plotly_chart(fig10, use_container_width=True)
 
-# MOM 動能指標
-with st.expander("MOM - 動能指標"):
-    fig11 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig11.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig11.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_MOM+1:],
-            y=KBar_df['MOM'][last_nan_index_MOM+1:],
-            mode='lines',
-            name=f'MOM({mom_period})'
-        )
-    )
-    st.plotly_chart(fig11, use_container_width=True)
-
-# TRIX 三重平滑移動平均動能
-with st.expander("TRIX - 三重平滑移動平均動能"):
-    fig12 = make_subplots(specs=[[{"secondary_y": False}]])
-    fig12.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
-    fig12.add_trace(
-        go.Scatter(
-            x=KBar_df['time'][last_nan_index_TRIX+1:],
-            y=KBar_df['TRIX'][last_nan_index_TRIX+1:],
-            mode='lines',
-            name=f'TRIX({trix_period})'
-        )
-    )
-    st.plotly_chart(fig12, use_container_width=True)
 
 # PSAR 停損轉向指標
 with st.expander("PSAR - 停損轉向指標"):
