@@ -332,22 +332,6 @@ else:
 
 
 
-#%%
-######   OBV（On-Balance Volume）指標
-@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
-def Calculate_OBV(df):
-    obv = [0]
-    for i in range(1, len(df)):
-        if df['close'][i] > df['close'][i-1]:
-            obv.append(obv[-1] + df['volume'][i])
-        elif df['close'][i] < df['close'][i-1]:
-            obv.append(obv[-1] - df['volume'][i])
-        else:
-            obv.append(obv[-1])
-    return pd.Series(obv, index=df.index)
-
-KBar_df['OBV'] = Calculate_OBV(KBar_df)
-last_nan_index_OBV = 0  # OBV 一開始就不會有 NaN
 
 #%%
 #####   ROC - 價格變動率指標
@@ -378,6 +362,22 @@ with st.expander("設定 CCI 參數"):
     cci_period = st.slider("CCI 計算週期", 1, 100, 20)
 KBar_df['CCI'] = Calculate_CCI(KBar_df, cci_period)
 
+#%%
+######   OBV（On-Balance Volume）指標
+@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
+def Calculate_OBV(df):
+    obv = [0]
+    for i in range(1, len(df)):
+        if df['close'][i] > df['close'][i-1]:
+            obv.append(obv[-1] + df['volume'][i])
+        elif df['close'][i] < df['close'][i-1]:
+            obv.append(obv[-1] - df['volume'][i])
+        else:
+            obv.append(obv[-1])
+    return pd.Series(obv, index=df.index)
+
+KBar_df['OBV'] = Calculate_OBV(KBar_df)
+last_nan_index_OBV = 0  # OBV 一開始就不會有 NaN
 
 
 #%%
@@ -549,18 +549,6 @@ with st.expander("MACD(異同移動平均線)"):
 
 
 
-with st.expander("OBV（量價關係指標）"):
-    fig6 = make_subplots(specs=[[{"secondary_y": True}]])
-    fig6.update_layout(
-        yaxis=dict(fixedrange=False, autorange=True),
-        xaxis=dict(rangeslider=dict(visible=True))
-    )
-    fig6.add_trace(go.Scatter(
-        x=KBar_df['time'], 
-        y=KBar_df['OBV'], 
-        mode='lines', line=dict(color='green', width=2), name='OBV'
-    ), secondary_y=False)
-    st.plotly_chart(fig6, use_container_width=True)
 
 # 計算各指標的最後 NaN 索引位置
 last_nan_index_CCI   = KBar_df['CCI'][::-1].index[KBar_df['CCI'][::-1].apply(pd.isna)][0]
@@ -599,7 +587,18 @@ with st.expander("CCI - 商品通道指標"):
     )
     st.plotly_chart(fig6, use_container_width=True)
 
-
+with st.expander("OBV（量價關係指標）"):
+    fig6 = make_subplots(specs=[[{"secondary_y": True}]])
+    fig6.update_layout(
+        yaxis=dict(fixedrange=False, autorange=True),
+        xaxis=dict(rangeslider=dict(visible=True))
+    )
+    fig6.add_trace(go.Scatter(
+        x=KBar_df['time'], 
+        y=KBar_df['OBV'], 
+        mode='lines', line=dict(color='green', width=2), name='OBV'
+    ), secondary_y=False)
+    st.plotly_chart(fig6, use_container_width=True)
 
 # PSAR 停損轉向指標
 with st.expander("PSAR - 停損轉向指標"):
